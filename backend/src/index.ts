@@ -14,8 +14,21 @@ import emailRoutes from './routes/emailRoutes';
 const app = express();
 
 // ─── Middleware ───────────────────────────────────────────────
+const allowedOrigins = [
+  'http://localhost:5173',
+  'https://outbox-scheduler-five.vercel.app',
+  config.frontendUrl,
+];
+
 app.use(cors({
-  origin: config.frontendUrl,
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps, curl, or same-origin)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
+      return callback(null, true);
+    }
+    return callback(null, true); // Permissive CORS for deployed demo
+  },
   credentials: true,
 }));
 app.use(express.json({ limit: '10mb' }));
