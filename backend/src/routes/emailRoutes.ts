@@ -3,6 +3,7 @@ import multer from 'multer';
 import { authMiddleware } from '../middleware/auth';
 import { scheduleEmailBatch } from '../services/schedulerService';
 import { parseEmailsFromContent } from '../utils/csvParser';
+import { removeEmailJob } from '../queue/emailQueue';
 import prisma from '../db/prisma';
 import { ScheduleEmailRequest, PaginatedResponse, EmailResponse, StatsResponse } from '../types';
 
@@ -260,6 +261,7 @@ router.delete('/:id', async (req: Request, res: Response) => {
       return;
     }
 
+    await removeEmailJob(email.id);
     await prisma.email.delete({ where: { id: email.id } });
 
     res.json({ message: 'Email cancelled successfully' });

@@ -62,13 +62,14 @@ export async function addEmailJob(
 }
 
 /**
- * Check if a job exists in the queue (not yet completed/failed).
+ * Remove an email job from the queue if still pending/delayed.
  */
-export async function jobExists(emailId: string): Promise<boolean> {
+export async function removeEmailJob(emailId: string): Promise<boolean> {
   const jobId = `email-${emailId}`;
   const job = await emailQueue.getJob(jobId);
-  if (!job) return false;
-
-  const state = await job.getState();
-  return state !== 'completed' && state !== 'failed' && state !== 'unknown';
+  if (job) {
+    await job.remove();
+    return true;
+  }
+  return false;
 }

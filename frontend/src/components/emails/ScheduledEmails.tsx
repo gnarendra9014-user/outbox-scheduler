@@ -1,20 +1,40 @@
 import { useState } from 'react';
-import { Clock, ExternalLink } from 'lucide-react';
+import { Clock, Trash2 } from 'lucide-react';
 import { Table } from '../ui/Table';
 import { StatusBadge } from '../ui/StatusBadge';
 import { EmptyState } from '../ui/EmptyState';
 import { TableSkeleton } from '../ui/Spinner';
 import { useScheduledEmails } from '../../hooks/useEmails';
+import api from '../../api/client';
+import toast from 'react-hot-toast';
 import type { Email } from '../../types';
 
 export function ScheduledEmails() {
   const [page, setPage] = useState(1);
-  const { data, isLoading, error } = useScheduledEmails(page);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const { data, isLoading, error, refetch } = useScheduledEmails(page);
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm('Are you sure you want to cancel this scheduled email?')) {
+      return;
+    }
+
+    setDeletingId(id);
+    try {
+      await api.delete(`/emails/${id}`);
+      toast.success('Scheduled email cancelled successfully');
+      refetch();
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Failed to cancel email');
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   if (isLoading) {
     return (
       <div className="glass-card">
-        <TableSkeleton rows={5} cols={4} />
+        <TableSkeleton rows={5} cols={5} />
       </div>
     );
   }
@@ -67,6 +87,20 @@ export function ScheduledEmails() {
       key: 'status',
       header: 'Status',
       render: (email: Email) => <StatusBadge status={email.status} />,
+    },
+    {
+      key: 'actions',
+      header: 'Action',
+      render: (email: Email) => (
+        <button
+          onClick={() => handleDelete(email.id)}
+          disabled={deletingId === email.id}
+          className="p-1.5 rounded-lg text-dark-400 hover:text-red-400 hover:bg-red-500/10 transition-all duration-150 disabled:opacity-50"
+          title="Cancel scheduled email"
+        >
+          <Trash2 className="w-4 h-4" />
+        </button>
+      ),
     },
   ];
 
