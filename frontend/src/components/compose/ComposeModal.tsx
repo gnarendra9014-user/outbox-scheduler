@@ -133,16 +133,40 @@ export function ComposeModal({ isOpen, onClose, onSuccess }: ComposeModalProps) 
           required
         />
 
-        {/* File Upload */}
-        <div>
+        {/* File Upload & Manual Recipients */}
+        <div className="space-y-3">
           <FileUpload onFileContent={handleFileContent} />
-          {recipients.length > 0 && (
-            <div className="mt-2 flex items-center gap-2">
-              <Users className="w-4 h-4 text-primary-400" />
-              <span className="text-sm text-primary-300 font-medium">
-                {recipients.length} email address{recipients.length !== 1 ? 'es' : ''} detected
+          
+          <div className="flex items-center gap-2">
+            <div className="flex-1 h-px bg-dark-700/50" />
+            <span className="text-xs text-dark-500 uppercase">or enter emails manually</span>
+            <div className="flex-1 h-px bg-dark-700/50" />
+          </div>
+
+          <Input
+            placeholder="Type or paste emails separated by commas (e.g. john@example.com, sara@test.com)"
+            onChange={(e) => {
+              const val = e.target.value;
+              const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
+              const matches = val.match(emailRegex) || [];
+              const unique = [...new Set(matches.map((m) => m.toLowerCase()))];
+              if (unique.length > 0) {
+                setRecipients(unique);
+              }
+            }}
+          />
+
+          {recipients.length > 0 ? (
+            <div className="flex items-center gap-2 px-3 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
+              <Users className="w-4 h-4 text-emerald-400" />
+              <span className="text-sm text-emerald-300 font-medium">
+                ✅ {recipients.length} valid email address{recipients.length !== 1 ? 'es' : ''} ready to schedule
               </span>
             </div>
+          ) : (
+            <p className="text-xs text-amber-400/80">
+              ⚠️ Upload a CSV or enter at least 1 recipient email to enable scheduling.
+            </p>
           )}
         </div>
 
