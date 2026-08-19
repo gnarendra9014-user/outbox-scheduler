@@ -1,0 +1,69 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum EmailStatus {
+  PENDING
+  QUEUED
+  SENDING
+  SENT
+  FAILED
+  RATE_LIMITED
+}
+
+model User {
+  id        String   @id @default(uuid())
+  googleId  String   @unique @map("google_id")
+  email     String   @unique
+  name      String
+  avatar    String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  emails    Email[]
+
+  @@map("users")
+}
+
+model Email {
+  id                 String      @id @default(uuid())
+  userId             String      @map("user_id")
+  user               User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recipientEmail     String      @map("recipient_email")
+  senderEmail        String      @map("sender_email")
+  subject            String
+  body               String      @db.Text
+  scheduledAt        DateTime    @map("scheduled_at")
+  sentAt             DateTime?   @map("sent_at")
+  status             EmailStatus @default(PENDING)
+  jobId              String?     @map("job_id")
+  batchId            String      @map("batch_id")
+  error              String?     @db.Text
+  previewUrl         String?     @map("preview_url") @db.Text
+  etherealMessageId  String?     @map("ethereal_message_id")
+  createdAt          DateTime    @default(now()) @map("created_at")
+  updatedAt          DateTime    @updatedAt @map("updated_at")
+
+  @@index([userId])
+  @@index([status])
+  @@index([batchId])
+  @@index([scheduledAt])
+  @@index([senderEmail])
+  @@map("emails")
+}
+
+model Sender {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  name         String
+  etherealUser String   @map("ethereal_user")
+  etherealPass String   @map("ethereal_pass")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("senders")
+}
