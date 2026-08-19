@@ -74,7 +74,7 @@ export async function handleGoogleCallback(
   const token = jwt.sign(
     { userId: user.id, email: user.email },
     config.jwtSecret,
-    { expiresIn: config.jwtExpiresIn }
+    { expiresIn: config.jwtExpiresIn as any }
   );
 
   return {
